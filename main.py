@@ -231,36 +231,47 @@ def login(driver, creds):
 # ---------------------------------------------------------------
 # 7. MAIN
 # ---------------------------------------------------------------
+NUM_USERS = 10   # ← change this to 5, 10, 20, whatever you want
+
 def main():
-    creds = make_credentials()
-    print("Generated credentials:")
-    for key, value in creds.items():
-        print(f"   {key:12}: {value}")
+    print(f"Creating {NUM_USERS} account(s)...\n")
 
-    # --- Step 1: Register in a fresh browser ---
-    print("\n=== Step 1: Register ===")
-    driver = webdriver.Chrome()
-    registered = False
-    try:
-        registered = register(driver, creds)
-    finally:
-        driver.quit()
-        print("Browser closed.")
+    for i in range(NUM_USERS):
+        print(f"\n{'='*50}")
+        print(f"  ACCOUNT {i+1} of {NUM_USERS}")
+        print(f"{'='*50}")
 
-    if not registered:
-        print("\nStopping — registration failed.")
-        return
+        # --- 1. Generate credentials ---
+        creds = make_credentials()
+        print("Generated credentials:")
+        for key, value in creds.items():
+            print(f"   {key:12}: {value}")
 
-    save_credentials(creds)
+        # --- 2. Register ---
+        driver = webdriver.Chrome()
+        registered = False
+        try:
+            registered = register(driver, creds)
+        finally:
+            driver.quit()
 
-    # --- Step 2: Log in (fresh browser) to prove the account works ---
-    print("\n=== Step 2: Verify login in a fresh browser ===")
-    driver = webdriver.Chrome()
-    try:
-        login(driver, creds)
-    finally:
-        driver.quit()
-        print("Browser closed.")
+        # --- 3. Save if successful ---
+        if registered:
+            save_credentials(creds)
+        else:
+            print("⚠️ Skipping save — registration failed for this account.")
+
+        # --- 4. Small pause between accounts (be polite to the server) ---
+        if i < NUM_USERS - 1:
+            print("Waiting 3 seconds before next account...")
+            time.sleep(3)
+
+    print(f"\n✅ Done. Created {NUM_USERS} account(s).")
+    print(f"📄 Credentials saved to {CSV_FILE}")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
